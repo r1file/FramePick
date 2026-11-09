@@ -122,7 +122,7 @@ FramePick self-test --video sample.mp4 --report check/report.json --screenshot c
 - GIF 为无声格式。当前没有字幕烧录、画面裁剪、转场或复杂图层编辑。
 - HDR 素材的显示和导出色彩可能因平台而不同；初版未提供专门的 HDR 色调映射。
 - 内存和导出耗时随所选片段的时长、分辨率和帧率变化。默认 640px / 15 FPS；超长 GIF 应降低输出设置。
-- 当前 Windows 已在本机实际验证；macOS / Linux 的流程已配置，成功构建和播放仍需对应系统验证。
+- Windows 已在本机实际验证；Windows、Linux x86_64、macOS arm64 均通过 GitHub CI 和单文件包内自检。CI 使用测试环境，实际桌面设备仍需持续验证。
 
 ## License
 

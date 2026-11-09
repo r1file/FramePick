@@ -17,6 +17,57 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def isolate_macos_libraries(binaries: Path) -> dict:
+    """Give command-line media libraries names distinct from Qt's FFmpeg.
+
+    PyInstaller normalizes Mach-O dependencies by basename and creates root
+    symlinks. Homebrew and Qt can ship incompatible builds with the SAME name.
+    Unique install names prevent accidental mixing in the frozen package.
+    """
+    staged: dict[Path, Path] = {}
+    links: dict[Path, list[tuple[str, Path]]] = {}
+    pending = [
+        (binaries / name, Path(shutil.which(name)).resolve()) for name in ("ffmpeg", "ffprobe")
+    ]
+    while pending:
+        target, original = pending.pop()
+        output = subprocess.check_output(["otool", "-L", str(original)], text=True)
+        links[target] = []
+        for line in output.splitlines()[1:]:
+            reference = line.strip().split(" (", 1)[0]
+            if reference.startswith(("/usr/lib/", "/System/Library/")):
+                continue
+            if reference.startswith("@loader_path/"):
+                dependency = original.parent / reference.removeprefix("@loader_path/")
+            elif reference.startswith("@rpath/"):
+                dependency = original.parent / reference.removeprefix("@rpath/")
+                if not dependency.exists():
+                    dependency = Path("/opt/homebrew/lib") / Path(reference).name
+            else:
+                dependency = Path(reference)
+            dependency = dependency.resolve(strict=True)
+            if dependency == original:  # LC_ID_DYLIB is listed by otool too.
+                continue
+            if dependency not in staged:
+                destination = binaries / f"framepick-media-{dependency.name}"
+                shutil.copy2(dependency, destination)
+                staged[dependency] = destination
+                pending.append((destination, dependency))
+            links[target].append((reference, staged[dependency]))
+    for target, imports in links.items():
+        command = ["install_name_tool"]
+        if target.name not in ("ffmpeg", "ffprobe"):
+            command += ["-id", f"@rpath/{target.name}"]
+        for reference, dependency in imports:
+            command += ["-change", reference, f"@loader_path/{dependency.name}"]
+        if len(command) > 1:
+            subprocess.run([*command, str(target)], check=True)
+        subprocess.run(
+            ["codesign", "--force", "--sign", "-", str(target)], check=True, capture_output=True
+        )
+    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in staged.values()}
+
+
 def prepare(*, archive: Path | None = None, from_system=False):
     manifest = json.loads((ROOT / "packaging/media-tools.json").read_text(encoding="utf-8"))
     key = f"{platform.system().lower()}-{platform.machine().lower()}"
@@ -36,6 +87,14 @@ def prepare(*, archive: Path | None = None, from_system=False):
         provenance["source_information"] = (
             "Local build: retain its provider's source/build and license materials."
         )
+        if sys.platform == "darwin":
+            provenance["isolated_library_sha256"] = isolate_macos_libraries(binaries)
+            if shutil.which("brew"):
+                info = subprocess.check_output(
+                    ["brew", "info", "--json=v2", "--installed"], text=True
+                )
+                (licenses / "homebrew-formulae.json").write_text(info, encoding="utf-8")
+                provenance["build_recipe"] = "https://github.com/Homebrew/homebrew-core"
     else:
         if key not in manifest["platforms"]:
             raise SystemExit(

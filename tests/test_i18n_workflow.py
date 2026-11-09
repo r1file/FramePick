@@ -135,20 +135,22 @@ def test_restored_unvisited_clips_get_correct_visible_thumbnails(window, video, 
         option.widget = window.clip_list
         image = QImage(360, 82, QImage.Format.Format_ARGB32)
         image.fill(QColor("black"))
-        painter = QPainter(image)
+        painted_text = []
+
+        class RecordingPainter(QPainter):
+            def drawText(self, *args):
+                painted_text.append(args)
+                return super().drawText(*args)
+
+        painter = RecordingPainter(image)
         window.clip_list.itemDelegate().paint(painter, option, window.clip_list.model().index(i, 0))
         painter.end()
         assert getattr(image.pixelColor(40, 30), channel)() >= 100
         # The duration/status must be visibly painted below the header. Qt's
         # style option turns model newlines into U+2028, which once lost this row.
-        assert (
-            sum(
-                image.pixelColor(x, y).lightness() > 100
-                for x in range(112, 280)
-                for y in range(42, 61)
-            )
-            > 25
-        )
+        assert len(painted_text) == 2
+        assert painted_text[1][0].top() > painted_text[0][0].bottom()
+        assert tr("待导出") in painted_text[1][-1]
     window.clip_list.setCurrentRow(1)
     before = window.player.position()
     window.change_language("ja")

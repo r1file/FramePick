@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+artifacts/
+vendor/
+*.framepick.json
+*.log
+.DS_Store
+Thumbs.db
+FramePick.data/

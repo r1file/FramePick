@@ -1,0 +1,16 @@
+{
+  "provider": "FFmpeg-Builds/FFmpeg-Builds (formerly BtbN)",
+  "release": "autobuild-2026-11-09-12-42",
+  "upstream_revision": "d4070a14ce",
+  "recipe_url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/tree/autobuild-2026-11-09-12-42",
+  "platforms": {
+    "windows-amd64": {
+      "url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-09-12-42/ffmpeg-n9.0.2-48-gd4070a14ce-win64-lgpl-9.0.zip",
+      "sha256": "fc9fbc4615986fdfea41904396074fe8fc0ba061cd974f63bd301cc5e1949a35"
+    },
+    "linux-x86_64": {
+      "url": "https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-09-12-42/ffmpeg-n9.0.2-48-gd4070a14ce-linux64-lgpl-9.0.tar.xz",
+      "sha256": "f95f189668268b8ec2c8acce6ea034cf36f93ba99a09f2654d0cfbd89c5c0ebd"
+    }
+  }
+}

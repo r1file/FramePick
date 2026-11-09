@@ -1,0 +1,21 @@
+name: Bug report / 问题报告
+description: Report playback, selection, export or packaging problems.
+body:
+  - type: textarea
+    attributes:
+      label: What happened? / 现象与复现步骤
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: FramePick version and OS / 版本与系统
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Source characteristics / 视频特征
+      description: Container, codec, resolution, frame rate, duration. Do not upload private videos.
+  - type: textarea
+    attributes:
+      label: Export log / 导出日志
+      description: Remove private paths before attaching the export log from the output folder.
